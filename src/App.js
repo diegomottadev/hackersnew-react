@@ -145,7 +145,7 @@ class App extends Component {
     //if (!result) { return null; }
     // onDismiss={this.onDismiss}
     return (
-      <div className="page"> 
+      <div className="page">
         <div className="interactions">
           <ButtonWithLoading
             isLoading={isLoading}
@@ -153,7 +153,7 @@ class App extends Component {
           >
             More
           </ButtonWithLoading>
-          <br/>
+          <br />
           {list
             ? <ListWithSearch
               value={searchTerm}
@@ -178,21 +178,28 @@ const Sort = ({
   sortKey,
   activeSortKey,
   onSort,
-  children
+  children,
+  reverse
 }) => {
   //importar el paquete npn classesname para definir con clases condicionales
   const sortClass = classNames(
     'button-inline',
     { 'button-active': sortKey === activeSortKey }
-    );
-    return (
+  );
+  return (<div>
+    {
+      sortKey === activeSortKey && reverse?  <FontAwesomeIcon icon="arrow-down"/> :  <FontAwesomeIcon icon="arrow-up"/>
+    }
+   
     <Button
-    onClick={() => onSort(sortKey)}
-    className={sortClass}
+      onClick={() => onSort(sortKey)}
+      className={sortClass}
     >
-    {children}
+      {children}
     </Button>
-    );
+  </div>
+
+  );
 }
 
 //Componente funcional
@@ -242,6 +249,7 @@ const Table = ({
             sortKey={'TITLE'}
             onSort={onSort}
             activeSortKey={sortKey}
+            reverse={isSortReverse}
           >
             Title
           </Sort>
@@ -251,6 +259,7 @@ const Table = ({
             sortKey={'AUTHOR'}
             onSort={onSort}
             activeSortKey={sortKey}
+            reverse={isSortReverse}
           >
             Author
           </Sort>
@@ -260,6 +269,7 @@ const Table = ({
             sortKey={'COMMENTS'}
             onSort={onSort}
             activeSortKey={sortKey}
+            reverse={isSortReverse}
           >
             Comments
           </Sort>
@@ -269,7 +279,7 @@ const Table = ({
             sortKey={'POINTS'}
             onSort={onSort}
             activeSortKey={sortKey}
-
+            reverse={isSortReverse}
           >
             Points
           </Sort>
