@@ -2,6 +2,11 @@
 
 **Live demo:** https://diegomottadev.github.io/hackersnew-react/
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dark.png">
+  <img alt="HN Search showing React stories sorted by points" src="docs/screenshots/light.png">
+</picture>
+
 I started learning React in 2019, and this was one of my first projects.
 
 I built it step by step alongside *The Road to React* by Robin Wieruch, and it's where I picked up the fundamentals: components, state and props, fetching from an API, higher-order components. You can read the book [on GitHub](https://github.com/the-road-to-learn-react/the-road-to-react).
@@ -13,6 +18,7 @@ The app is a small Hacker News search client. It talks straight to the public [A
 - Searches HN and caches results per search term. Go back to a term you already searched and it renders instantly, without another request.
 - Loads 100 stories per page. "Load more" sits at the bottom of the list, where your thumb already is.
 - Sorts by title, author, comments or points. Click the same option again to flip the order.
+- Keeps the search and sort in the URL, like `?q=react&sort=points`. You can share a link to the exact view, and the browser's back button takes you to your previous search.
 - Lets you dismiss stories you don't care about. They come back on reload (nothing is saved).
 - Opens stories and comment threads in a new tab.
 - Follows your system's light or dark mode, and switches to a card layout under 560px.
@@ -103,17 +109,23 @@ export const SORT_OPTIONS = [
 
 ## Tests
 
-There's 1 test right now: `src/components/App/App.test.jsx` mounts the app and checks it doesn't crash. The API is mocked with `vi.mock`, so it runs offline.
+38 tests with Vitest and React Testing Library. They run offline: the API is mocked.
 
 ```bash
 npx vitest run
 ```
+
+- `utils/*.test.js` and `api/hackerNews.test.js` cover the pure functions: sorting, URL state, story links, date and number formatting, and how the request URL gets built.
+- `components/App/App.test.jsx` uses the app like a person would. It searches, sorts, dismisses, loads more, retries after an error and hits the back button.
+
+1 test checks the race condition from the changelog: it holds back the first response until a second search has finished, then makes sure the late answer doesn't replace what's on screen. I broke the fix on purpose to check that this test fails, and it did.
 
 ## Known issues
 
 - React is still on 16.14 and mounts with `ReactDOM.render`. Moving to React 18 or 19 means switching to `createRoot`, and probably rewriting `App` with hooks.
 - There's no linter. ESLint used to come bundled with `react-scripts`, and it left with it.
 - Dismissed stories only live in memory.
+- The screenshots are taken by hand (headless Chrome against `npm run preview`). They won't update on their own when the UI changes.
 
 ## Changelog
 
@@ -156,6 +168,8 @@ I came back to this project in 2026 to clean it up and close it out. What change
 - `lodash` is imported per function (`lodash/sortBy`), which cut the JS bundle from about 80 kB to 62 kB gzipped.
 - The dev server listens on `localhost` only. CRA exposed it to the whole local network.
 - Dropped `@fortawesome/free-brands-svg-icons`, which nothing used.
+- Search and sort now live in the URL. Shared links open the same view, and the back button works.
+- 38 tests replace the single smoke test from CRA. They cover utils, the API layer and the full app flow.
 - Published on GitHub Pages with `npm run deploy`. I wrote a small shell script for it, because the `gh-pages` npm package pulls in a version of `braces` with an open advisory.
 
 ## Credits

@@ -7,6 +7,7 @@ import withSearch from '../../hocs/withSearch';
 import withLoading from '../../hocs/withLoading';
 import { searchStories } from '../../api/hackerNews';
 import { DEFAULT_QUERY, DEFAULT_PAGE } from '../../constants/search';
+import { readUrlState, buildUrlSearch } from '../../utils/urlState';
 import './App.css';
 
 const StoryListWithSearch = withSearch(StoryList);
@@ -15,15 +16,17 @@ const ButtonWithLoading = withLoading(Button);
 class App extends Component {
   constructor(props) {
     super(props);
+    // The URL decides the first search and sort, so shared links open the same view.
+    const { query, sortKey, isSortReverse } = readUrlState(window.location.search);
     this.state = {
       // Cache of results per search term: { [term]: { hits, page } }.
       results: null,
       // searchKey is the term that was submitted. searchTerm is what's in the input right now.
       searchKey: '',
-      searchTerm: DEFAULT_QUERY,
+      searchTerm: query === null ? DEFAULT_QUERY : query,
       isLoading: false,
-      sortKey: 'NONE',
-      isSortReverse: false,
+      sortKey,
+      isSortReverse,
       error: null,
     };
     this.needsToFetch = this.needsToFetch.bind(this);
@@ -34,11 +37,35 @@ class App extends Component {
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
     this.onSort = this.onSort.bind(this);
+    this.onPopState = this.onPopState.bind(this);
+    this.updateUrl = this.updateUrl.bind(this);
+  }
+
+  // Writes the state to the URL. setState is async, so callers pass the new values in changes.
+  // method is 'pushState' for a new history entry, or 'replaceState' to change the current one.
+  updateUrl(method, changes) {
+    const { searchKey, sortKey, isSortReverse } = { ...this.state, ...changes };
+    const search = buildUrlSearch({ query: searchKey, sortKey, isSortReverse });
+    if (search !== window.location.search) {
+      window.history[method](null, '', search);
+    }
+  }
+
+  // Runs when the user goes back or forward in the browser history.
+  onPopState() {
+    const { query, sortKey, isSortReverse } = readUrlState(window.location.search);
+    const searchTerm = query === null ? DEFAULT_QUERY : query;
+    this.setState({ searchTerm, searchKey: searchTerm, sortKey, isSortReverse });
+    if (this.needsToFetch(searchTerm)) {
+      this.fetchStories(searchTerm, DEFAULT_PAGE);
+    }
   }
 
   onSort(sortKey) {
     const isSortReverse = this.state.sortKey === sortKey && !this.state.isSortReverse;
     this.setState({ sortKey, isSortReverse });
+    // Sorting changes the current entry, so the back button doesn't step through every click.
+    this.updateUrl('replaceState', { sortKey, isSortReverse });
   }
 
   needsToFetch(searchTerm) {
@@ -49,6 +76,7 @@ class App extends Component {
   onSearchSubmit(event) {
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
+    this.updateUrl('pushState', { searchKey: searchTerm });
     if (this.needsToFetch(searchTerm)) {
       this.fetchStories(searchTerm, DEFAULT_PAGE);
     }
@@ -114,11 +142,14 @@ class App extends Component {
     this._isMounted = true;
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
+    this.updateUrl('replaceState', { searchKey: searchTerm });
     this.fetchStories(searchTerm, DEFAULT_PAGE);
+    window.addEventListener('popstate', this.onPopState);
   }
 
   componentWillUnmount() {
     this._isMounted = false;
+    window.removeEventListener('popstate', this.onPopState);
   }
 
   render() {
