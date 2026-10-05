@@ -1,5 +1,7 @@
 # HN Search
 
+**Live demo:** https://diegomottadev.github.io/hackersnew-react/
+
 I started learning React in 2019, and this was one of my first projects.
 
 I built it step by step alongside *The Road to React* by Robin Wieruch, and it's where I picked up the fundamentals: components, state and props, fetching from an API, higher-order components. You can read the book [on GitHub](https://github.com/the-road-to-learn-react/the-road-to-react).
@@ -42,6 +44,19 @@ It opens on http://localhost:5173 (Vite picks the next free port if that one's t
 | `npm test` | Vitest in watch mode (`npx vitest run` runs once and exits) |
 | `npm run build` | Production build in `build/` |
 | `npm run preview` | Serves the production build locally |
+| `npm run deploy` | Builds and publishes to GitHub Pages |
+
+## Deploy
+
+The site lives on GitHub Pages, served from the `gh-pages` branch. To publish a new version:
+
+```bash
+npm run deploy
+```
+
+`scripts/deploy.sh` builds the app, checks out `gh-pages` in a temporary `.gh-pages/` folder with `git worktree`, swaps in the new build and pushes it. Your current branch stays the same. Each deploy commit points to the source commit it came from, like `Deploy fec5e69`.
+
+The build uses `/hackersnew-react/` as its base path (set in `vite.config.mjs`), because Pages serves the repo from that subfolder. The dev server keeps using `/`.
 
 ## Project structure
 
@@ -140,6 +155,7 @@ I came back to this project in 2026 to clean it up and close it out. What change
 - `lodash` is imported per function (`lodash/sortBy`), which cut the JS bundle from about 80 kB to 62 kB gzipped.
 - The dev server listens on `localhost` only. CRA exposed it to the whole local network.
 - Dropped `@fortawesome/free-brands-svg-icons`, which nothing used.
+- Published on GitHub Pages with `npm run deploy`. I wrote a small shell script for it, because the `gh-pages` npm package pulls in a version of `braces` with an open advisory.
 
 ## Credits
 
