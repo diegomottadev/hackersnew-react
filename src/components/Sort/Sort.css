@@ -1,0 +1,28 @@
+.sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--step--1);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s var(--ease), color 0.15s var(--ease),
+    border-color 0.15s var(--ease);
+}
+
+.sort:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+
+.sort-active,
+.sort-active:hover {
+  border-color: transparent;
+  background: var(--accent-soft);
+  color: var(--accent);
+}

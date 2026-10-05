@@ -1,0 +1,12 @@
+.page {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+.load-more {
+  display: flex;
+  justify-content: center;
+  min-height: var(--tap);
+  margin-top: var(--space-5);
+}

@@ -1,13 +1,130 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Design tokens. Los colores salen de una paleta OKLCH (tonos parejos entre
+   modo claro y oscuro), pero se escriben en hex/rgba porque el minificador
+   de react-scripts 3 no soporta oklch(). */
+:root {
+  color-scheme: light dark;
+
+  --bg: #fbf9f7;
+  --surface: #ffffff;
+  --surface-hover: #f8f5f1;
+  --border: #e5e2de;
+  --text: #211c17;
+  --text-muted: #69625d;
+  --accent: #c73800;
+  --accent-hover: #b52500;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(199, 56, 0, 0.1);
+  --danger: #c21725;
+  --danger-soft: rgba(194, 23, 37, 0.08);
+  --focus-ring: rgba(199, 56, 0, 0.45);
+  --skeleton: #eae7e3;
+  --header-bg: rgba(251, 249, 247, 0.8);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --step--1: clamp(0.8rem, calc(0.78rem + 0.1vw), 0.86rem);
+  --step-0: clamp(0.94rem, calc(0.9rem + 0.2vw), 1rem);
+  --step-1: clamp(1.06rem, calc(1rem + 0.3vw), 1.2rem);
+  --step-3: clamp(1.5rem, calc(1.25rem + 1.2vw), 2.1rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.5rem;
+
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-full: 999px;
+  --shadow: 0 1px 2px rgba(29, 20, 13, 0.04), 0 4px 16px rgba(29, 20, 13, 0.04);
+  --tap: 44px;
+  --content-width: 960px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #120f0c;
+    --surface: #1b1714;
+    --surface-hover: #241f1c;
+    --border: #322d29;
+    --text: #edebe7;
+    --text-muted: #a39d98;
+    --accent: #f68c36;
+    --accent-hover: #ff9e53;
+    --accent-contrast: #211209;
+    --accent-soft: rgba(246, 140, 54, 0.14);
+    --danger: #fd736d;
+    --danger-soft: rgba(253, 115, 109, 0.12);
+    --focus-ring: rgba(246, 140, 54, 0.55);
+    --skeleton: #2a2522;
+    --header-bg: rgba(18, 15, 12, 0.75);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+/* Solo se muestra el anillo de foco al navegar con teclado. */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

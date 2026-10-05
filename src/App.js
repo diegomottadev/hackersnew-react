@@ -3,17 +3,12 @@ import './App.css';
 import { sortBy } from 'lodash';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowUp, faArrowDown, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { searchStories } from './api';
 
 const DEFAULT_QUERY = 'redux';
 const DEFAULT_PAGE = 0;
-const DEFAULT_HPP = '100';
-const PATH_BASE = 'https://hn.algolia.com/api/v1';
-const PATH_SEARCH = '/search';
-const PARAM_SEARCH = 'query=';
-const PARAM_PAGE = 'page=';
-const PARAM_HPP = 'hitsPerPage=';
 
 const SORTS = {
   NONE: list => list,
@@ -22,10 +17,16 @@ const SORTS = {
   COMMENTS: list => sortBy(list, 'num_comments').reverse(),
   POINTS: list => sortBy(list, 'points').reverse(),
 };
-//cadenas de textos en ES6
 
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
-console.log(url)
+// Columnas ordenables de la tabla. isDescending indica el orden natural de su SORT.
+const COLUMNS = [
+  { sortKey: 'TITLE', label: 'Title', width: '40%', isDescending: false, render: item => <a href={item.url}>{item.title}</a> },
+  { sortKey: 'AUTHOR', label: 'Author', width: '30%', isDescending: false, render: item => item.author },
+  { sortKey: 'COMMENTS', label: 'Comments', width: '10%', isDescending: true, render: item => item.num_comments },
+  { sortKey: 'POINTS', label: 'Points', width: '10%', isDescending: true, render: item => item.points },
+];
+const ARCHIVE_WIDTH = '10%';
+
 class App extends Component {
   constructor(props) {
     super(props);
@@ -36,10 +37,11 @@ class App extends Component {
       isLoading: false,
       sortKey: 'NONE',
       isSortReverse: false,
+      error: null,
     };
-    this.needsToSearchTopstories = this.needsToSearchTopstories.bind(this);
-    this.setSearchTopStories = this.setSearchTopStories.bind(this);
-    this.fetchSearchTopStories = this.fetchSearchTopStories.bind(this);
+    this.needsToFetch = this.needsToFetch.bind(this);
+    this.setStories = this.setStories.bind(this);
+    this.fetchStories = this.fetchStories.bind(this);
     this.onSearchChange = this.onSearchChange.bind(this);
     this.onSearchSubmit = this.onSearchSubmit.bind(this);
     this.onDismiss = this.onDismiss.bind(this);
@@ -51,16 +53,16 @@ class App extends Component {
     this.setState({ sortKey, isSortReverse });
   }
 
-  needsToSearchTopstories(searchTerm) {
-    return !this.state.results[searchTerm];
+  needsToFetch(searchTerm) {
+    const { results } = this.state;
+    return !results || !results[searchTerm];
   }
 
   onSearchSubmit(event) {
     const { searchTerm } = this.state;
-    console.log(searchTerm)
     this.setState({ searchKey: searchTerm });
-    if (this.needsToSearchTopstories(searchTerm)) {
-      this.fetchSearchTopStories(searchTerm, DEFAULT_PAGE);
+    if (this.needsToFetch(searchTerm)) {
+      this.fetchStories(searchTerm, DEFAULT_PAGE);
     }
     event.preventDefault();
   }
@@ -77,49 +79,49 @@ class App extends Component {
       }
     });
   }
-  //E6
-  isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
   //metodo que se ejecuta al escribir en el input
-  onSearchChange = (event) => {
+  onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
   }
-  setSearchTopStories(result) {
-    //console.log(result)
-    //this.setState({ result });
 
+  // Guarda la respuesta bajo el término que se pidió, no bajo el searchKey actual,
+  // para que una respuesta lenta no pise los resultados de otra búsqueda.
+  setStories(result, searchKey) {
     const { hits, page } = result;
-    const { searchKey, results } = this.state;
-    const oldHits = results && results[searchKey]
-      ? results[searchKey].hits
-      : [];
-    const updatedHits = [
-      ...oldHits,
-      ...hits
-    ];
-    this.setState({
-      results: {
-        ...results,
-        [searchKey]: { hits: updatedHits, page }
-      },
-      isLoading: false,
+    this.setState(prevState => {
+      const { results } = prevState;
+      const oldHits = results && results[searchKey]
+        ? results[searchKey].hits
+        : [];
+      return {
+        results: {
+          ...results,
+          [searchKey]: { hits: [...oldHits, ...hits], page }
+        },
+        isLoading: false,
+        error: null,
+      };
     });
-
   }
 
-  fetchSearchTopStories(searchTerm, page) {
-
+  fetchStories(searchTerm, page) {
     this.setState({ isLoading: true });
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`).then(response => response.json())
-      .then(result => this.setSearchTopStories(result))
-      .catch(e => e);
+    searchStories(searchTerm, page)
+      .then(result => this._isMounted && this.setStories(result, searchTerm))
+      .catch(error => this._isMounted && this.setState({ error, isLoading: false }));
   }
+
   componentDidMount() {
+    this._isMounted = true;
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });
-    this.fetchSearchTopStories(searchTerm, DEFAULT_PAGE);
+    this.fetchStories(searchTerm, DEFAULT_PAGE);
   }
 
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
 
   render() {
     const {
@@ -128,7 +130,8 @@ class App extends Component {
       searchKey,
       isLoading,
       sortKey,
-      isSortReverse
+      isSortReverse,
+      error
     } = this.state;
 
     const page = (
@@ -142,34 +145,29 @@ class App extends Component {
       results[searchKey].hits
     ) || [];
 
-    //if (!result) { return null; }
-    // onDismiss={this.onDismiss}
     return (
       <div className="page">
         <div className="interactions">
           <ButtonWithLoading
             isLoading={isLoading}
-            onClick={() => this.fetchSearchTopStories(searchKey, page + 1)}
+            onClick={() => this.fetchStories(searchKey, page + 1)}
           >
             More
           </ButtonWithLoading>
           <br />
-          {list
-            ? <ListWithSearch
-              value={searchTerm}
-              onChange={this.onSearchChange}
-              onSubmit={this.onSearchSubmit}
-              list={list}
-              pattern={searchTerm}
-              onDismiss={this.onDismiss}
-              sortKey={sortKey}
-              onSort={this.onSort}
-              isSortReverse={isSortReverse}
-            ></ListWithSearch>
-            : null
-          }
+          {error && <p>Something went wrong.</p>}
+          <TableWithSearch
+            value={searchTerm}
+            onChange={this.onSearchChange}
+            onSubmit={this.onSearchSubmit}
+            list={list}
+            onDismiss={this.onDismiss}
+            sortKey={sortKey}
+            onSort={this.onSort}
+            isSortReverse={isSortReverse}
+          />
         </div>
-      </div >
+      </div>
     );
   }
 }
@@ -178,29 +176,37 @@ const Sort = ({
   sortKey,
   activeSortKey,
   onSort,
-  children,
-  reverse
+  isSortReverse,
+  isDescending,
+  children
 }) => {
-  //importar el paquete npn classesname para definir con clases condicionales
+  const isActive = sortKey === activeSortKey;
   const sortClass = classNames(
     'button-inline',
-    { 'button-active': sortKey === activeSortKey }
+    { 'button-active': isActive }
   );
-  return (<div>
-    {
-      sortKey === activeSortKey && reverse?  <FontAwesomeIcon icon="arrow-down"/> :  <FontAwesomeIcon icon="arrow-up"/>
-    }
-   
-    <Button
-      onClick={() => onSort(sortKey)}
-      className={sortClass}
-    >
-      {children}
-    </Button>
-  </div>
-
+  const isShownDescending = isDescending !== isSortReverse;
+  return (
+    <div>
+      {isActive && <FontAwesomeIcon icon={isShownDescending ? faArrowDown : faArrowUp} />}
+      <Button
+        onClick={() => onSort(sortKey)}
+        className={sortClass}
+      >
+        {children}
+      </Button>
+    </div>
   );
 }
+
+Sort.propTypes = {
+  sortKey: PropTypes.string.isRequired,
+  activeSortKey: PropTypes.string.isRequired,
+  onSort: PropTypes.func.isRequired,
+  isSortReverse: PropTypes.bool.isRequired,
+  isDescending: PropTypes.bool.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 //Componente funcional
 const Search = ({
@@ -220,123 +226,68 @@ const Search = ({
     </button>
   </form>
 
-//Search.propTypes = {
-//value: PropTypes.any.isRequired,
-//children: PropTypes.any.isRequired,
-//onChange: PropTypes.any.isRequired,
-//onSubmit: PropTypes.any.isRequired,
-//};
+Search.propTypes = {
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onSubmit: PropTypes.func.isRequired,
+  children: PropTypes.node.isRequired,
+};
 
 //Componente funcional
 const Table = ({
   list,
-  pattern,
   onDismiss,
   isSortReverse,
   sortKey,
-  onSort, }) => {
-  const isSearched = searchTerm => item => item.title.toLowerCase().includes(searchTerm.toLowerCase());
-  //<!--filter(isSearched(pattern))-->
+  onSort,
+}) => {
   const sortedList = SORTS[sortKey](list);
   const reverseSortedList = isSortReverse
-    ? sortedList.reverse()
+    ? [...sortedList].reverse()
     : sortedList;
   return (
     <div className="table">
       <div className="table-header">
-        <span style={{ width: '40%' }}>
-          <Sort
-            sortKey={'TITLE'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            reverse={isSortReverse}
-          >
-            Title
-          </Sort>
-        </span>
-        <span style={{ width: '30%' }}>
-          <Sort
-            sortKey={'AUTHOR'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            reverse={isSortReverse}
-          >
-            Author
-          </Sort>
-        </span>
-        <span style={{ width: '10%' }}>
-          <Sort
-            sortKey={'COMMENTS'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            reverse={isSortReverse}
-          >
-            Comments
-          </Sort>
-        </span>
-        <span style={{ width: '10%' }}>
-          <Sort
-            sortKey={'POINTS'}
-            onSort={onSort}
-            activeSortKey={sortKey}
-            reverse={isSortReverse}
-          >
-            Points
-          </Sort>
-        </span>
-        <span style={{ width: '10%' }}>
+        {COLUMNS.map(column =>
+          <span key={column.sortKey} style={{ width: column.width }}>
+            <Sort
+              sortKey={column.sortKey}
+              onSort={onSort}
+              activeSortKey={sortKey}
+              isSortReverse={isSortReverse}
+              isDescending={column.isDescending}
+            >
+              {column.label}
+            </Sort>
+          </span>
+        )}
+        <span style={{ width: ARCHIVE_WIDTH }}>
           Archive
         </span>
       </div>
       {reverseSortedList.map(item =>
         <div key={item.objectID} className="table-row">
-          <span style={{ width: '40%' }}>
-            <a href={item.url}>{item.title}</a>
-          </span>
-          <span style={{ width: '30%' }}>{item.author}</span>
-          <span style={{ width: '10%' }}>{item.num_comments}</span>
-          <span style={{ width: '10%' }}>{item.points}</span>
-          <span style={{ width: '10%' }}>
+          {COLUMNS.map(column =>
+            <span key={column.sortKey} style={{ width: column.width }}>
+              {column.render(item)}
+            </span>
+          )}
+          <span style={{ width: ARCHIVE_WIDTH }}>
             <Button onClick={() => onDismiss(item.objectID)}>
               Dismiss
-              </Button>
+            </Button>
           </span>
         </div>
       )}
     </div>
   );
 }
-/*
-(<div><Search
-  value={searchTerm}
-  onChange={this.onSearchChange}
-  onSubmit={this.onSearchSubmit}
->
-  Search
-</Search>
-  <Table
-    list={list}
-    pattern={searchTerm}
-    onDismiss={this.onDismiss}
-  /></div>);
-*/
-const withList = (Component) => ({ value, onChange, onSubmit, ...rest }) => {
-  return (<div>
-    <Search
-      value={value}
-      onChange={onChange}
-      onSubmit={onSubmit}
-    > Search</Search>
-
-    <Component {...rest} />
-  </div>);
-}
-const ListWithSearch = withList(Table);
 
 Table.propTypes = {
   list: PropTypes.arrayOf(
     PropTypes.shape({
       objectID: PropTypes.string.isRequired,
+      title: PropTypes.string,
       author: PropTypes.string,
       url: PropTypes.string,
       num_comments: PropTypes.number,
@@ -344,7 +295,35 @@ Table.propTypes = {
     })
   ).isRequired,
   onDismiss: PropTypes.func.isRequired,
+  sortKey: PropTypes.oneOf(Object.keys(SORTS)).isRequired,
+  onSort: PropTypes.func.isRequired,
+  isSortReverse: PropTypes.bool.isRequired,
 };
+
+const getDisplayName = Component => Component.displayName || Component.name || 'Component';
+
+// HOC: antepone un formulario de búsqueda al componente.
+const withSearch = (Component) => {
+  const WithSearch = ({ value, onChange, onSubmit, ...rest }) =>
+    <div>
+      <Search
+        value={value}
+        onChange={onChange}
+        onSubmit={onSubmit}
+      >
+        Search
+      </Search>
+      <Component {...rest} />
+    </div>;
+  WithSearch.displayName = `withSearch(${getDisplayName(Component)})`;
+  WithSearch.propTypes = {
+    value: PropTypes.string.isRequired,
+    onChange: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+  };
+  return WithSearch;
+}
+const TableWithSearch = withSearch(Table);
 
 //Componente funcional
 const Button = ({
@@ -360,25 +339,29 @@ const Button = ({
     {children}
   </button>
 
-const Loading = () =>
-  <div>
-    <FontAwesomeIcon icon="spinner" color="#ddd" spin />
-  </div>
-
-const withLoading = (Component) => ({ isLoading, ...rest }) => {
-  return isLoading
-    ? <Loading />
-    : <Component {...rest} />
-}
-const ButtonWithLoading = withLoading(Button);
-Button.defaultProps = {
-  className: '',
-};
-
 Button.propTypes = {
   onClick: PropTypes.func.isRequired,
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
 };
+
+const Loading = () =>
+  <div>
+    <FontAwesomeIcon icon={faSpinner} color="#ddd" spin />
+  </div>
+
+// HOC: muestra un spinner en lugar del componente mientras isLoading es true.
+const withLoading = (Component) => {
+  const WithLoading = ({ isLoading, ...rest }) =>
+    isLoading
+      ? <Loading />
+      : <Component {...rest} />;
+  WithLoading.displayName = `withLoading(${getDisplayName(Component)})`;
+  WithLoading.propTypes = {
+    isLoading: PropTypes.bool.isRequired,
+  };
+  return WithLoading;
+}
+const ButtonWithLoading = withLoading(Button);
 
 export default App;

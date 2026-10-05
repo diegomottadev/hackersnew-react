@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
 
-jest.mock('./api', () => ({
+jest.mock('../../api/hackerNews', () => ({
   searchStories: jest.fn(() => Promise.resolve({ hits: [], page: 0 })),
 }));
 
