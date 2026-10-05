@@ -127,6 +127,39 @@ npx vitest run
 - Dismissed stories only live in memory.
 - The screenshots are taken by hand (headless Chrome against `npm run preview`). They won't update on their own when the UI changes.
 
+## Ideas for practice
+
+If you want to use this project to practice, here are features and improvements discussed during development that were left out to keep the codebase simple:
+
+### Features and API
+
+- **Filter by story type:** Algolia supports a `tags` query parameter (`story`, `ask_hn`, `show_hn`). Add buttons or a dropdown to filter stories by type.
+- **Sort by newest from the API:** Algolia provides a `/api/v1/search_by_date` endpoint. Use it to fetch recent stories chronologically, instead of only sorting the current page on the client.
+- **Highlight search terms:** Algolia returns `_highlightResult` with matched words. Render highlighted titles in the story list.
+- **Persist dismissed stories:** Store dismissed story IDs in `localStorage` so they stay hidden after reloading. Add a button to reset them.
+- **Saved stories:** Let users bookmark stories to `localStorage` and view them in a dedicated "Saved" tab or filter.
+- **View comments inside the app:** Fetch discussion details from `https://hn.algolia.com/api/v1/items/:id` and render top comments in a modal or expandable section, rather than only linking out to Hacker News.
+
+### UX and interactions
+
+- **Infinite scroll:** Use `IntersectionObserver` to trigger `fetchNextPage` automatically when the user scrolls near the bottom of the list.
+- **Keyboard navigation:** Add shortcuts: `j` and `k` to move between stories, `Enter` or `o` to open a story, and `/` to focus the search bar.
+- **Search as you type:** Add an option to run the search with a debounce timer while typing, without pressing Enter.
+
+### Modern React refactor
+
+- **Upgrade to React 18 or 19:** Replace `ReactDOM.render` with `createRoot` in `src/index.jsx`.
+- **Refactor `App` to hooks:** Convert the class component into a function component with `useState`, `useEffect` and `useCallback`.
+- **Extract custom hooks:** Move API fetching and caching into a `useHackerNews` hook, and URL state into a `useUrlState` hook.
+- **Replace HOCs:** Refactor `withSearch` and `withLoading` using modern component composition or hooks.
+
+### Tooling and quality
+
+- **TypeScript:** Migrate `.jsx` and `.js` files to `.tsx` and `.ts` incrementally, replacing `PropTypes` with TypeScript interfaces.
+- **Add a linter:** Configure ESLint (with modern flat config) and Prettier to keep formatting and code quality consistent.
+- **Automated CI/CD:** Add a GitHub Actions workflow to run tests on every push and deploy to GitHub Pages automatically.
+- **End-to-end tests:** Add Playwright tests to test the app in a real browser and generate fresh README screenshots automatically.
+
 ## Changelog
 
 ### 2026 revisit
