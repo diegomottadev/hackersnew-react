@@ -8,7 +8,12 @@ const DEFAULT_HPP = '100';
 const buildSearchUrl = (searchTerm, page) =>
   `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${encodeURIComponent(searchTerm)}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`;
 
-// Busca historias en Hacker News vía Algolia. Resuelve con { hits, page }.
+/**
+ * Searches Hacker News stories through the Algolia API.
+ * @param {string} searchTerm - Text to search for.
+ * @param {number} page - Page number, starting at 0.
+ * @returns {Promise<{hits: Object[], page: number}>} Rejects if the request fails or the status isn't 2xx.
+ */
 export const searchStories = (searchTerm, page) =>
   fetch(buildSearchUrl(searchTerm, page)).then(response => {
     if (!response.ok) {

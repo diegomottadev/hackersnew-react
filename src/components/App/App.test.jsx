@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { it, vi } from 'vitest';
 import App from './App';
 
-jest.mock('../../api/hackerNews', () => ({
-  searchStories: jest.fn(() => Promise.resolve({ hits: [], page: 0 })),
+vi.mock('../../api/hackerNews', () => ({
+  searchStories: vi.fn(() => Promise.resolve({ hits: [], page: 0 })),
 }));
 
 it('renders without crashing', () => {

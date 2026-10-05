@@ -17,44 +17,37 @@ The app is a small Hacker News search client. It talks straight to the public [A
 
 ## Stack
 
-React 16.11 on Create React App (`react-scripts` 3.2), with PropTypes, lodash, classnames and Font Awesome. Styles are plain CSS with custom properties.
+React 16.14 built with Vite 8, tested with Vitest. Also PropTypes, lodash, classnames and Font Awesome. Styles are plain CSS with custom properties and OKLCH colors.
 
 `App` is a class component, matching the chapters I followed in the book.
 
 ## Getting started
 
-You need Node and npm.
+You need Node 20.19 or newer, and npm.
 
 ```bash
 git clone https://github.com/diegomottadev/hackersnew-react.git
 cd hackersnew-react
 npm install
-npm start
+npm run dev
 ```
 
-It opens on http://localhost:3000.
-
-**On Node 17 or newer**, `react-scripts` 3 crashes on start with `ERR_OSSL_EVP_UNSUPPORTED`. Webpack 4 uses a hash that OpenSSL 3 dropped. Either switch to Node 16 or run it with the legacy provider:
-
-```bash
-NODE_OPTIONS=--openssl-legacy-provider npm start
-```
-
-Same flag for `npm run build`.
+It opens on http://localhost:5173 (Vite picks the next free port if that one's taken).
 
 ## Scripts
 
 | Command | What it does |
 | --- | --- |
-| `npm start` | Dev server with hot reload on port 3000 |
-| `npm test` | Jest in watch mode (`CI=true npm test` runs once and exits) |
+| `npm run dev` | Dev server with hot reload (`npm start` does the same) |
+| `npm test` | Vitest in watch mode (`npx vitest run` runs once and exits) |
 | `npm run build` | Production build in `build/` |
+| `npm run preview` | Serves the production build locally |
 
 ## Project structure
 
 ```
 src/
-├── index.js / index.css     # entry point; index.css holds the design tokens
+├── index.jsx / index.css    # entry point; index.css holds the design tokens
 ├── api/hackerNews.js        # searchStories(term, page)
 ├── constants/               # default query, sort functions and sort options
 ├── types/story.js           # shared PropTypes
@@ -71,7 +64,7 @@ src/
 A few rules I stuck to:
 
 - `App` owns all the state. Every other component gets props and renders.
-- Each component lives in its own folder with its CSS and an `index.js`, so imports read `import Button from '../Button'`.
+- Each component lives in its own folder with its `.jsx`, its CSS and an `index.js`, so imports read `import Button from '../Button'`.
 - `api/hackerNews.js` is the only file that knows Algolia's URL format. Swap the data source there and nothing else moves.
 - Colors, spacing and type sizes are CSS variables in `src/index.css`. Components only reference `var(--...)`, which is how dark mode works with a single media query.
 
@@ -95,17 +88,58 @@ export const SORT_OPTIONS = [
 
 ## Tests
 
-There's 1 test right now: `src/components/App/App.test.js` mounts the app and checks it doesn't crash. The API is mocked with `jest.mock`, so it runs offline.
+There's 1 test right now: `src/components/App/App.test.jsx` mounts the app and checks it doesn't crash. The API is mocked with `vi.mock`, so it runs offline.
 
 ```bash
-CI=true npm test
+npx vitest run
 ```
 
 ## Known issues
 
-- `react-scripts` 3.2 is from 2019, and its CSS minifier chokes on `oklch()` and on bare math inside `clamp()`. That's why the colors are hex/rgba and every `clamp()` wraps its middle value in `calc()`. Moving to Vite would fix it (and drop the OpenSSL flag too).
+- React is still on 16.14 and mounts with `ReactDOM.render`. Moving to React 18 or 19 means switching to `createRoot`, and probably rewriting `App` with hooks.
+- There's no linter. ESLint used to come bundled with `react-scripts`, and it left with it.
 - Dismissed stories only live in memory.
-- `@fortawesome/free-brands-svg-icons` and `@fortawesome/fontawesome-svg-core` are still in `package.json` but nothing imports them anymore.
+
+## Changelog
+
+### 2026 revisit
+
+I came back to this project in 2026 to clean it up and close it out. What changed:
+
+**Bugs fixed**
+
+- A slow response could land under the wrong search term. If you searched "redux" and then "react" fast enough, the "redux" results showed up as "react". Each response is now stored under the term that requested it.
+- Searching for something like `c++ & rust` broke the request URL. The term is encoded now.
+- A failed request left the loading spinner on forever. Errors now show a message with a Retry button.
+- Sorting with the reverse toggle mutated the list in state.
+- Submitting a search before the first response arrived crashed the app.
+
+**Structure**
+
+- `App.js` was 1 file with 389 lines holding everything. It's split into 12 components, each in its own folder, plus separate folders for the API layer, constants, PropTypes, utils and HOCs.
+- Dead code is gone: a duplicated `isSearched`, an unused `pattern` prop, commented-out JSX, debug `console.log`s.
+- Font Awesome icons are imported where they're used. Before, they were registered globally in `index.js`, and a missing registration only showed up as a console error.
+- Sort options come from a single config array, so adding one takes 2 edits (see above).
+- Code comments are in English now, and only where the code doesn't explain itself. Exported functions in `api/` and `utils/` have JSDoc.
+
+**Design and UX**
+
+- New look: design tokens as CSS variables, light and dark mode, fluid type, card layout on mobile.
+- Loading skeletons, an empty state and an error state with Retry.
+- "Load more" moved to the bottom of the list.
+- Each story shows its domain, how long ago it was posted and a link to the HN discussion. Stories without a URL (like Ask HN) link to the discussion instead of nowhere.
+- Links open in a new tab.
+- Keyboard focus is visible again. The old CSS removed the outline on every element.
+- Labels and ARIA attributes for screen readers, 44px tap targets and support for `prefers-reduced-motion`.
+
+**Tooling**
+
+- Migrated from Create React App (`react-scripts` 3.2) to Vite 8, and from Jest to Vitest. This closed all 94 Dependabot alerts: `npm audit` now reports 0 vulnerabilities. Almost all of them came from `react-scripts` dependencies. The other 4 were in `lodash`, now on 4.18.1.
+- The `NODE_OPTIONS=--openssl-legacy-provider` workaround for Node 17+ isn't needed anymore.
+- React went from 16.11 to 16.14 for the automatic JSX runtime.
+- `lodash` is imported per function (`lodash/sortBy`), which cut the JS bundle from about 80 kB to 62 kB gzipped.
+- The dev server listens on `localhost` only. CRA exposed it to the whole local network.
+- Dropped `@fortawesome/free-brands-svg-icons`, which nothing used.
 
 ## Credits
 

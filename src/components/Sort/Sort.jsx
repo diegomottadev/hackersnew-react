@@ -22,6 +22,7 @@ const Sort = ({
     >
       {children}
       {isActive && <FontAwesomeIcon icon={direction === 'descending' ? faArrowDown : faArrowUp} />}
+      {/* The arrow is only visual, so screen readers get the direction as text. */}
       {isActive && <span className="visually-hidden">, {direction}</span>}
     </button>
   );

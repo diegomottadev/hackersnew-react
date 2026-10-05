@@ -1,5 +1,6 @@
 export const formatNumber = value => (value || 0).toLocaleString('en-US');
 
+// Seconds per unit. Months and years are approximate (30 and 365 days).
 const UNITS = [
   ['year', 31536000],
   ['month', 2592000],
@@ -11,6 +12,12 @@ const UNITS = [
 
 const relativeTimeFormat = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
+/**
+ * Formats a date as relative time, for example "3 days ago".
+ * @param {string} isoDate - Date in ISO 8601 format, as Algolia sends it.
+ * @param {number} [now=Date.now()] - Reference time in milliseconds. Useful in tests.
+ * @returns {string|null} null if the date is missing or invalid.
+ */
 export const formatRelativeTime = (isoDate, now = Date.now()) => {
   const time = new Date(isoDate).getTime();
   if (!isoDate || Number.isNaN(time)) {

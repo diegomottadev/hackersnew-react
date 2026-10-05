@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Search from '../components/Search';
 import getDisplayName from '../utils/getDisplayName';
 
-// HOC: antepone un formulario de búsqueda al componente.
+// HOC: renders a search form above the wrapped component.
 const withSearch = (Component) => {
   const WithSearch = ({ value, onChange, onSubmit, ...rest }) =>
     <>

@@ -1,33 +1,32 @@
-/* Design tokens. Los colores salen de una paleta OKLCH (tonos parejos entre
-   modo claro y oscuro), pero se escriben en hex/rgba porque el minificador
-   de react-scripts 3 no soporta oklch(). */
+/* Design tokens. Los colores están en OKLCH para que los tonos sean
+   perceptualmente parejos entre el modo claro y el oscuro. */
 :root {
   color-scheme: light dark;
 
-  --bg: #fbf9f7;
-  --surface: #ffffff;
-  --surface-hover: #f8f5f1;
-  --border: #e5e2de;
-  --text: #211c17;
-  --text-muted: #69625d;
-  --accent: #c73800;
-  --accent-hover: #b52500;
-  --accent-contrast: #ffffff;
-  --accent-soft: rgba(199, 56, 0, 0.1);
-  --danger: #c21725;
-  --danger-soft: rgba(194, 23, 37, 0.08);
-  --focus-ring: rgba(199, 56, 0, 0.45);
-  --skeleton: #eae7e3;
-  --header-bg: rgba(251, 249, 247, 0.8);
+  --bg: oklch(98.4% 0.004 80);
+  --surface: oklch(100% 0 0);
+  --surface-hover: oklch(97.2% 0.006 80);
+  --border: oklch(91.5% 0.006 80);
+  --text: oklch(23% 0.012 60);
+  --text-muted: oklch(50% 0.012 60);
+  --accent: oklch(55% 0.19 40);
+  --accent-hover: oklch(50% 0.19 40);
+  --accent-contrast: oklch(100% 0 0);
+  --accent-soft: oklch(55% 0.19 40 / 0.1);
+  --danger: oklch(52% 0.2 25);
+  --danger-soft: oklch(52% 0.2 25 / 0.08);
+  --focus-ring: oklch(55% 0.19 40 / 0.45);
+  --skeleton: oklch(93% 0.006 80);
+  --header-bg: oklch(98.4% 0.004 80 / 0.8);
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --step--1: clamp(0.8rem, calc(0.78rem + 0.1vw), 0.86rem);
-  --step-0: clamp(0.94rem, calc(0.9rem + 0.2vw), 1rem);
-  --step-1: clamp(1.06rem, calc(1rem + 0.3vw), 1.2rem);
-  --step-3: clamp(1.5rem, calc(1.25rem + 1.2vw), 2.1rem);
+  --step--1: clamp(0.8rem, 0.78rem + 0.1vw, 0.86rem);
+  --step-0: clamp(0.94rem, 0.9rem + 0.2vw, 1rem);
+  --step-1: clamp(1.06rem, 1rem + 0.3vw, 1.2rem);
+  --step-3: clamp(1.5rem, 1.25rem + 1.2vw, 2.1rem);
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -39,7 +38,7 @@
   --radius-sm: 8px;
   --radius: 14px;
   --radius-full: 999px;
-  --shadow: 0 1px 2px rgba(29, 20, 13, 0.04), 0 4px 16px rgba(29, 20, 13, 0.04);
+  --shadow: 0 1px 2px oklch(20% 0.02 60 / 0.04), 0 4px 16px oklch(20% 0.02 60 / 0.04);
   --tap: 44px;
   --content-width: 960px;
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -47,22 +46,22 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #120f0c;
-    --surface: #1b1714;
-    --surface-hover: #241f1c;
-    --border: #322d29;
-    --text: #edebe7;
-    --text-muted: #a39d98;
-    --accent: #f68c36;
-    --accent-hover: #ff9e53;
-    --accent-contrast: #211209;
-    --accent-soft: rgba(246, 140, 54, 0.14);
-    --danger: #fd736d;
-    --danger-soft: rgba(253, 115, 109, 0.12);
-    --focus-ring: rgba(246, 140, 54, 0.55);
-    --skeleton: #2a2522;
-    --header-bg: rgba(18, 15, 12, 0.75);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --bg: oklch(17% 0.008 60);
+    --surface: oklch(21% 0.009 60);
+    --surface-hover: oklch(24.5% 0.01 60);
+    --border: oklch(30% 0.01 60);
+    --text: oklch(94% 0.006 80);
+    --text-muted: oklch(70% 0.01 70);
+    --accent: oklch(74% 0.16 55);
+    --accent-hover: oklch(79% 0.15 55);
+    --accent-contrast: oklch(20% 0.03 50);
+    --accent-soft: oklch(74% 0.16 55 / 0.14);
+    --danger: oklch(72% 0.17 25);
+    --danger-soft: oklch(72% 0.17 25 / 0.12);
+    --focus-ring: oklch(74% 0.16 55 / 0.55);
+    --skeleton: oklch(27% 0.01 60);
+    --header-bg: oklch(17% 0.008 60 / 0.75);
+    --shadow: 0 1px 2px oklch(0% 0 0 / 0.3);
   }
 }
 

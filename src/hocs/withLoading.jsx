@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Loading from '../components/Loading';
 import getDisplayName from '../utils/getDisplayName';
 
-// HOC: muestra un spinner en lugar del componente mientras isLoading es true.
+// HOC: shows a spinner instead of the wrapped component while isLoading is true.
 const withLoading = (Component) => {
   const WithLoading = ({ isLoading, ...rest }) =>
     isLoading

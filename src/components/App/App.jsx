@@ -16,7 +16,9 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      // Cache of results per search term: { [term]: { hits, page } }.
       results: null,
+      // searchKey is the term that was submitted. searchTerm is what's in the input right now.
       searchKey: '',
       searchTerm: DEFAULT_QUERY,
       isLoading: false,
@@ -66,13 +68,12 @@ class App extends Component {
     });
   }
 
-  //metodo que se ejecuta al escribir en el input
   onSearchChange(event) {
     this.setState({ searchTerm: event.target.value });
   }
 
-  // Guarda la respuesta bajo el término que se pidió, no bajo el searchKey actual,
-  // para que una respuesta lenta no pise los resultados de otra búsqueda.
+  // Saves the response under the term that asked for it. If we used the current searchKey,
+  // a slow response could overwrite the results of a newer search.
   setStories(result, searchKey) {
     const { hits, page } = result;
     this.setState(prevState => {
@@ -98,8 +99,8 @@ class App extends Component {
       .catch(error => this._isMounted && this.setState({ error, isLoading: false }));
   }
 
-  // Pide la página siguiente del término activo, o la primera si todavía no hay resultados.
-  // Sirve tanto para "Load more" como para reintentar después de un error.
+  // Fetches the next page of the active term, or the first page if there are no results yet.
+  // Both "Load more" and "Retry" use it.
   fetchNextPage() {
     const { searchKey, results } = this.state;
     const cached = results && results[searchKey];
@@ -107,6 +108,7 @@ class App extends Component {
   }
 
   componentDidMount() {
+    // Responses can arrive after the component unmounts. This flag stops setState in that case.
     this._isMounted = true;
     const { searchTerm } = this.state;
     this.setState({ searchKey: searchTerm });

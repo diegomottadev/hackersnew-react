@@ -8,7 +8,7 @@ import { getStoryUrl, getStoryTitle, getItemUrl, getDomain } from '../../utils/s
 import { formatNumber, formatRelativeTime } from '../../utils/format';
 import './StoryItem.css';
 
-// Los links externos abren en una pestaña nueva; noopener evita que la página abierta controle esta.
+// External links open in a new tab. noopener stops the new page from controlling this one.
 const NEW_TAB = { target: '_blank', rel: 'noopener noreferrer' };
 
 const StoryItem = ({ story, onDismiss }) => {
