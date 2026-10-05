@@ -55,16 +55,18 @@ class App extends Component {
     event.preventDefault();
   }
 
+  // Uses prevState so two quick dismisses don't overwrite each other.
   onDismiss(id) {
-    const { searchKey, results } = this.state;
-    const { hits, page } = results[searchKey];
-    const isNotId = item => item.objectID !== id;
-    const updatedHits = hits.filter(isNotId);
-    this.setState({
-      results: {
-        ...results,
-        [searchKey]: { hits: updatedHits, page }
-      }
+    this.setState(prevState => {
+      const { searchKey, results } = prevState;
+      const { hits, page } = results[searchKey];
+      const isNotId = item => item.objectID !== id;
+      return {
+        results: {
+          ...results,
+          [searchKey]: { hits: hits.filter(isNotId), page }
+        }
+      };
     });
   }
 

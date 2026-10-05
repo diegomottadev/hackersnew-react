@@ -135,6 +135,7 @@ I came back to this project in 2026 to clean it up and close it out. What change
 - Dead code is gone: a duplicated `isSearched`, an unused `pattern` prop, commented-out JSX, debug `console.log`s.
 - Font Awesome icons are imported where they're used. Before, they were registered globally in `index.js`, and a missing registration only showed up as a console error.
 - Sort options come from a single config array, so adding one takes 2 edits (see above).
+- The old `develop` branch had 1 extra commit with the book's state management exercise. I brought over its `setState(prevState => ...)` fix for `onDismiss` and saved the commit as the `chapter/state-management` tag.
 - Code comments are in English now, and only where the code doesn't explain itself. Exported functions in `api/` and `utils/` have JSDoc.
 
 **Design and UX**
